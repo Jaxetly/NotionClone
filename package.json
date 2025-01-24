@@ -1,0 +1,43 @@
+{
+  "name": "Notion",
+  "version": "0.0.1",
+  "description": "Копия ушедшего из России Notion",
+  "main": "src/index.js",
+  "author": "Кузнецов Константин",
+  "license": "MIT",
+  "scripts": {
+    "watch": "webpack -w --mode development",
+    "build": "webpack --mode production",
+    "update": "git fetch origin main && git merge origin/main"
+  },
+  "dependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@tailwindcss/typography": "^0.5.16",
+    "@tiptap/core": "^2.11.2",
+    "@tiptap/extension-color": "^2.11.2",
+    "@tiptap/extension-link": "^2.11.3",
+    "@tiptap/extension-list-item": "^2.11.2",
+    "@tiptap/extension-text-style": "^2.11.2",
+    "@tiptap/extension-underline": "^2.11.3",
+    "@tiptap/pm": "^2.11.2",
+    "@tiptap/starter-kit": "^2.11.2",
+    "@tiptap/vue-2": "^2.11.2",
+    "babel": "^6.23.0",
+    "babel-loader": "^9.2.1",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "tailwindcss": "^3.4.17",
+    "vue": "2.7.16",
+    "webpack": "^5.97.1"
+  },
+  "devDependencies": {
+    "css-loader": "^7.1.2",
+    "sass": "^1.83.4",
+    "sass-loader": "^16.0.4",
+    "style-loader": "^4.0.0",
+    "vue-loader": "15.10.0",
+    "vue-template-compiler": "^2.7.16",
+    "webpack-cli": "^6.0.1"
+  }
+}
