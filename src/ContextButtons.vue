@@ -1,18 +1,12 @@
 <template>
     <div ref="contextMenu" class="context-menu" v-show="contextMenuVisible" :style="contextMenuStyle">
-        <div v-for="(group, groupIndex) in buttonGroups" :key="groupIndex" class="context-group">
-            <h6 class="context-group-title">{{ group.title }}</h6>
-            <button 
-                v-for="(button, buttonIndex) in group.buttons" 
-                :key="buttonIndex" 
-                @click="doAction(getAction(button))" 
-                :disabled="isDisabled(button)" 
-                :class="{ 'bg-blue-500': isActive(button), 'btn bg-gray-700 m-1 p-2 rounded': true }"
-                :title="button.label"
-            >
-                <i :class="button.icon"></i>
-            </button>
-        </div>
+        <ButtonGroup 
+            v-for="(group, groupIndex) in buttonGroups" 
+            :key="groupIndex" 
+            :title="group.title" 
+            :buttons="group.buttons" 
+            :editor="editor"
+        />
         <div class="context-group color-picker">
             <h6 class="context-group-title">Color</h6>
             <div class="btn bg-gray-700 m-1 p-2 rounded" @click="toggleSelect">
@@ -34,7 +28,12 @@
 </template>
 
 <script>
+import ButtonGroup from './ButtonGroup.vue';
+
 export default {
+    components: {
+        ButtonGroup
+    },
     props: {
         editor: {
             type: Object,
@@ -58,10 +57,7 @@ export default {
                 { value: '#16A085', label: 'Sea Green' },
                 { value: '#FF6F92', label: 'Pink' },
             ],
-            selectColorStyle: {
-                top: '0px',
-                right: '0px'
-            },
+            selectColorStyle: {top: '0px',left: '0px'},
             buttonGroups: [
                 {
                     title: 'Text Formatting',
@@ -117,45 +113,6 @@ export default {
         }
     },
     methods: {
-        getAction(button) {
-            const actions = {
-                toggleHeading: () => this.editor.chain().focus()[button.action]({ level: button.level }).run,
-                setLink: () => {
-                    const url = window.prompt('URL');
-                    return this.editor.chain().focus().extendMarkRange('link')[button.action]({ href: url }).run 
-                },
-                default: () => this.editor.chain().focus()[button.action]().run,
-            };
-            return (actions[button.action] || actions.default)();
-        },
-        isDisabled(button) {
-            if (button.isUndoRedo) {
-                return !this.editor.can()[button.action]();
-            }
-            if (button.action === 'toggleHeading' && button.level !== undefined) {
-                return !this.editor.can()[button.action]({ level: button.level });
-            }
-            if (button.isClear || button.action === 'setLink') {
-                return false;
-            }
-            return !this.editor.can()[button.action]();
-        },
-        isActive(button) {
-            const activeChecks = {
-                toggleBold: () => this.editor.isActive('bold'),
-                toggleItalic: () => this.editor.isActive('italic'),
-                toggleStrike: () => this.editor.isActive('strike'),
-                toggleUnderline: () => this.editor.isActive('underline'),
-                toggleCode: () => this.editor.isActive('code'),
-                setLink: () => this.editor.isActive('link'),
-                toggleHeading: () => this.editor.isActive('heading', { level: button.level }),
-                setColor: () => this.editor.isActive('textStyle', { color: button.color }),
-                toggleBlockquote: () => this.editor.isActive('blockquote'),
-                toggleCodeBlock: () => this.editor.isActive('codeBlock'),
-                default: () => this.editor.isActive(button.action),
-            };
-            return (activeChecks[button.action] || activeChecks.default)();
-        },
         setColor(color) {
             this.editor.chain().focus().setColor(color).run();
             this.isSelectVisible = false;
@@ -180,9 +137,6 @@ export default {
                 });
             }
         },
-        doAction(action) {
-            action();
-        },
         switchContextMenu(event) {
             const menuOffset = 60;
 
@@ -205,30 +159,13 @@ export default {
 };
 </script>
 
-<style scoped>
-.btn {
-    padding: 0.375rem 0.75rem;
-}
-
-.btn:disabled, .btn.disabled {
-    opacity: 0.65;
-}
-
+<style>
 .context-menu {
     left: 10px;
     position: fixed;
     display: inline-flex;
     /*border: 1px solid #ccc;*/
     z-index: 1000;
-}
-
-.context-group {
-    border-right: 2px solid #ccc;
-    padding: 10px;
-}
-
-.context-group:last-child {
-    border-right: none;
 }
 
 .color-options {
@@ -251,6 +188,23 @@ export default {
     padding: 2px;
     border-width: 1px;
     border-color: rgb(55 65 81);
+}
+
+.btn {
+    padding: 0.375rem 0.75rem;
+}
+
+.btn:disabled, .btn.disabled {
+    opacity: 0.65;
+}
+
+.context-group {
+    border-right: 2px solid #ccc;
+    padding: 10px;
+}
+
+.context-group:last-child {
+    border-right: none;
 }
 
 </style>
