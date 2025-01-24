@@ -29,6 +29,9 @@ export default {
         EditorContent,
         ContextButtons,
     },
+    props: {
+        initContent: String
+    },
     data() {
         return {
             editor: null,
@@ -75,17 +78,23 @@ export default {
             content: this.content,
             onUpdate: ({ editor }) => {
                 this.content = editor.getHTML();
-                this.autoSave();
+                this.$emit('updateContent', this.content);
             },
+            onCreate: () => {
+                if (this.initContent) {
+                    this.editor.commands.setContent(this.initContent);
+                }
+            }
         });
     },
-    methods: {
-        autoSave() {
-            if (this.autosaveTimerId) {clearTimeout(this.autosaveTimerId);}
-            this.autosaveTimerId = setTimeout(() => {
-                alert("написали: " + this.content);
-            }, 3000);
+    watch: {
+        initContent: {
+            handler(newContent) {
+                this.editor.commands.setContent(newContent);
+            },
         },
+    },
+    methods: {
         focus(event) {
             this.editor.chain().focus();
         },
