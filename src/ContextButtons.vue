@@ -161,7 +161,7 @@ export default {
 
 <style>
 .context-menu {
-    left: 10px;
+    left: 310px;
     position: fixed;
     display: inline-flex;
     /*border: 1px solid #ccc;*/

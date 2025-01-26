@@ -1,6 +1,6 @@
 <template>
     <div @contextmenu.prevent="switchContextMenu" @click="focus" ref="editor">
-        <editor-content v-model="content" />
+        <editor-content  />
         <div v-if="editor != null">
             <ContextButtons 
                 :editor="editor"
@@ -36,7 +36,7 @@ export default {
         return {
             editor: null,
             autosaveTimerId: null,
-            content: '<p><strong>Привет идиот</strong></p><p><em>Привет идиот</em></p><p><s>Привет идиот</s></p><p><code class=&quot;code-selection text-slate-100 bg-gray-700 font-normal&quot;>Привет идиот</code></p><h1>Привет идиот</h1><h2>Привет идиот</h2><h3>Привет идиот</h3><h4>Привет идиот</h4><hr><p>Привет идиот</p><ul><li><p>Привет идиот</p></li></ul><ol><li><p>Привет идиот</p></li></ol><pre><code>Привет идиот</code></pre><blockquote><p>Привет идиот</p></blockquote><p><span style="color: #958DF1">Привет идиот</span></p>',
+            content: '',
             contextMenuVisible: false,
             contextMenuStyle: {
                 top: '0px',
@@ -72,7 +72,7 @@ export default {
             ],
             editorProps: {
                 attributes: {
-                    class: 'h-100 prose-invert prose prose-lg xl:prose-2xl m-5 my-0 focus:outline-none max-w-screen-xl block w-full',
+                    class: 'h-100 prose-invert prose prose-lg xl:prose-2xl m-5 py-5 focus:outline-none max-w-screen-xl block w-full strong',
                 },
             },
             content: this.content,
@@ -131,5 +131,9 @@ export default {
 .link {
     color: #958DF1;
     cursor: pointer;
+}
+
+.strong strong {
+    color: inherit;
 }
 </style>
