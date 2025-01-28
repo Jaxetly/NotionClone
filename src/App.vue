@@ -35,6 +35,7 @@ export default {
     watch: {
         currentDocument(newIndex) {
             this.content = this.documents[newIndex].content || '';
+            this.contentCopy = this.content;
         }
     },
     created() {
@@ -42,8 +43,8 @@ export default {
     },
     methods: {
         updateContent(documentContent) {
-            this.content = documentContent;
-            this.autoSave(documentContent);
+            this.contentCopy = documentContent;
+            this.autoSave(this.contentCopy);
         },
         autoSave(documentContent) {
             if (this.autosaveTimerId) {clearTimeout(this.autosaveTimerId);}
@@ -74,12 +75,13 @@ export default {
 
             this.currentDocument = latestIndex;
         },
-        switchDocument(index) {
+        switchDocument (index)  {
             if (index === this.currentDocument) return;
             if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
 
-            this.saveContent(this.content);
+            this.saveContent(this.contentCopy);
             this.currentDocument = index;
+            
         },
         createDocument() {
             this.documents.push(

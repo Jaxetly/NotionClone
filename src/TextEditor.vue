@@ -88,10 +88,8 @@ export default {
         });
     },
     watch: {
-        initContent: {
-            handler(newContent) {
-                this.editor.commands.setContent(newContent);
-            },
+        initContent(newContent) {
+            this.editor.commands.setContent(newContent);
         },
     },
     methods: {
