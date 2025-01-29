@@ -8,6 +8,7 @@
             @switchDocument="switchDocument" />
         <TextEditor 
             id="content" 
+            ref="textEditor"
             :initContent="content"
             @updateContent="updateContent" 
             class="bg-gray-900 flex justify-center" />
@@ -26,7 +27,7 @@ export default {
     },
     data() {
         return {
-            documents: JSON.parse(localStorage.getItem('documents')) || [],
+            documents: JSON.parse(localStorage.getItem('documents')) || [{content: '', lastChange: Date.now()}],
             contentCopy: '',
             content: '',
             currentDocument: 0,
@@ -34,7 +35,9 @@ export default {
     },
     watch: {
         currentDocument(newIndex) {
+            this.content = "abobaabobaabobaabobaabobaabobaabobaabobaaboba";
             this.content = this.documents[newIndex].content || '';
+            //this.$refs.textEditor.editor.commands.setContent(this.content);
             this.contentCopy = this.content;
         }
     },
@@ -103,15 +106,6 @@ export default {
     height: 100%; /* или любая другая высота */
 }
 
-.top {
-    height: 100px; /* фиксированная высота для верхнего элемента */
-}
-
-.bottom {
-    flex: 1; /* занимает оставшееся пространство */
-    padding-bottom: 200px;
-}
-
 #app {
     display: flex;
     height: 100vh;
@@ -119,7 +113,7 @@ export default {
 }
 
 #menu {
-    min-width: 300px; /* Ширина меню */
+    width: 300px; /* Ширина меню */
     border-right: 3px solid rgb(209 213 219);
     overflow-y: auto; /* Вертикальная прокрутка для меню */
 }

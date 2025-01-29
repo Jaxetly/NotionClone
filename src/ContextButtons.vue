@@ -1,5 +1,5 @@
 <template>
-    <div ref="contextMenu" class="context-menu" v-show="contextMenuVisible" :style="contextMenuStyle">
+    <div ref="contextMenu" class="context-menu" :style="contextMenuStyle">
         <ButtonGroup 
             v-for="(group, groupIndex) in buttonGroups" 
             :key="groupIndex" 
@@ -38,13 +38,17 @@ export default {
         editor: {
             type: Object,
             required: true
-        }
+        },
+        editorElement: {
+            type: HTMLDivElement,
+            required: true
+        },
     },
     data() {
         return {
             isSelectVisible: false,
             contextMenuVisible: false,
-            contextMenuStyle: {top:''},
+            contextMenuStyle: {top:'-100px'},
             colors: [
                 { value: '#FF5733', label: 'Red' },
                 { value: '#2ECC71', label: 'Green' },
@@ -112,6 +116,8 @@ export default {
             ]
         }
     },
+    mounted() {      
+    },
     methods: {
         setColor(color) {
             this.editor.chain().focus().setColor(color).run();
@@ -131,29 +137,53 @@ export default {
 
                     const isCursorNearBottom = rectButton.bottom + colorSelectHeight > window.innerHeight;
                     this.selectColorStyle = {
-                        top: isCursorNearBottom ? `${rectButton.top - colorSelectHeight - rectMenu.top}px` : `${rectButton.bottom - rectMenu.top}px`,
-                        left: `${rectButton.left - 10}px`,
+                        top: isCursorNearBottom ? `${rectButton.top - colorSelectHeight - rectMenu.top - 2}px` : `${rectButton.bottom - rectMenu.top + 2}px`,
+                        right: `14px`,
                     };
                 });
             }
         },
-        switchContextMenu(event) {
-            const menuOffset = 60;
-
-            this.contextMenuVisible = !this.contextMenuVisible;
-            const contextMenuElement = this.$refs.contextMenu;
-
-            if(contextMenuElement && this.contextMenuVisible) {
-                this.$nextTick(() => {
-                    const contextMenuHeight = contextMenuElement.offsetHeight;
-                    const isCursorNearBottom = event.clientY + contextMenuHeight + menuOffset > window.innerHeight;
-                    this.contextMenuStyle = {
-                        top: isCursorNearBottom ? `${event.clientY - contextMenuHeight - menuOffset}px` : `${event.clientY + menuOffset}px`,
-                    };
-                });
-            } else if (this.isSelectVisible) {
-                this.toggleSelect();
+        toggleContextMenu(event) {
+            if(!this.contextMenuVisible) {
+                this.enableContextMenu(event.clientY);
+            } else {
+                this.disableContextMenu();
             }
+        },
+        enableContextMenu(clientY) {
+            const menuOffset = 50;
+            const contextMenuElement = this.$refs.contextMenu;
+            this.contextMenuVisible = true;
+
+            this.$nextTick(() => {
+                const contextMenuHeight = contextMenuElement.offsetHeight;
+                const isCursorNearBottom = clientY + contextMenuHeight + menuOffset > window.innerHeight;
+                const isCursorNearTop = clientY - contextMenuHeight - menuOffset < 0;
+
+                const contextMenuRect = contextMenuElement.getBoundingClientRect();
+                const editorRect = this.editorElement.getBoundingClientRect();
+
+                const topPositionToTop = isCursorNearTop
+                    ? `${10}px`
+                    : `${clientY - contextMenuHeight - menuOffset}px`;
+
+                const topPositionToBottom = isCursorNearBottom 
+                    ? `${clientY - contextMenuHeight - menuOffset}px` 
+                    : `${clientY + menuOffset}px`
+
+                this.contextMenuStyle = {
+                    top: topPositionToTop,
+                    left: `${(editorRect.width - contextMenuRect.width) / 2 + 295}px`,
+                };
+            });
+        },
+        disableContextMenu() {
+            this.contextMenuVisible = false;
+            if (this.isSelectVisible) this.toggleSelect();
+            this.contextMenuStyle = {
+                top: '-100px',
+                left: this.contextMenuStyle.left,
+            };
         },
     }
 };
@@ -161,11 +191,11 @@ export default {
 
 <style>
 .context-menu {
-    left: 310px;
     position: fixed;
     display: inline-flex;
-    /*border: 1px solid #ccc;*/
     z-index: 1000;
+    transition: top 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .color-options {
@@ -184,6 +214,7 @@ export default {
 }
 
 .color-option {
+    text-align: right;
     cursor: pointer;
     padding: 2px;
     border-width: 1px;

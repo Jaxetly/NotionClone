@@ -1,11 +1,12 @@
 <template>
-    <div @contextmenu.prevent="switchContextMenu" @click="focus" ref="editor">
+    <div @contextmenu.prevent="toggleContextMenu" @click="focus" ref="editor">
         <editor-content  />
         <div v-if="editor != null">
             <ContextButtons 
                 :editor="editor"
+                :editorElement="$refs.editor.__vue__.$el"
                 ref="contextMenu"
-                class="rounded-lg bg-gray-950 text-white"
+                class="rounded-lg bg-gray-800 text-white"
             />
         </div>
     </div>
@@ -36,11 +37,9 @@ export default {
         return {
             editor: null,
             autosaveTimerId: null,
+            debounceTimerId: null,
             content: '',
-            contextMenuVisible: false,
-            contextMenuStyle: {
-                top: '0px',
-            }
+            contextMenuCall: false,
         };
     },
     mounted() {
@@ -60,19 +59,11 @@ export default {
                     HTMLAttributes: {
                         class: 'code-selection text-slate-100 bg-gray-700 font-normal',
                     }
-                }),
-                keymap({'Tab': (state, dispatch) => {
-                    const { from, to } = state.selection;
-                    const text = '    ';
-                    if (dispatch) {
-                        dispatch(state.tr.insertText(text, from, to));
-                    }
-                    return true;
-                }}),
+                })
             ],
             editorProps: {
                 attributes: {
-                    class: 'h-100 prose-invert prose prose-lg xl:prose-2xl m-5 py-5 focus:outline-none max-w-screen-xl block w-full strong',
+                    class: 'h-100 prose-invert prose prose-lg xl:prose-2xl m-5 py-10 focus:outline-none max-w-screen-xl block w-full strong',
                 },
             },
             content: this.content,
@@ -84,6 +75,35 @@ export default {
                 if (this.initContent) {
                     this.editor.commands.setContent(this.initContent);
                 }
+            },
+            onSelectionUpdate: ({editor}) => {
+                if (this.debounceTimerId) clearTimeout(this.debounceTimeout);
+
+                this.debounceTimerId = setTimeout(() => {
+                    if(this.contextMenuCall) {
+                        this.contextMenuCall = false;
+                        return;
+                    }
+
+                    const { from, to } = editor.state.selection;
+                    if (from === to) {
+                        this.$refs.contextMenu.disableContextMenu();
+                    } else {
+
+                        try {
+                            const coords = editor.view.coordsAtPos(from);
+                            if (coords) {
+                                this.$refs.contextMenu.enableContextMenu(coords.top);
+                            } else {
+                                console.error('coords is undefined');
+                                this.$refs.contextMenu.disableContextMenu();
+                            }
+                        } catch (error) {
+                            console.error('Error handling selection update:', error);
+                            this.$refs.contextMenu?.disableContextMenu();
+                        }
+                    }
+                }, 110);
             }
         });
     },
@@ -96,8 +116,9 @@ export default {
         focus(event) {
             this.editor.chain().focus();
         },
-        switchContextMenu(event) {
-            this.$refs.contextMenu.switchContextMenu(event);
+        toggleContextMenu(event) {
+            this.contextMenuCall = true;
+            this.$refs.contextMenu.enableContextMenu(event.clientY);
         },
     },
     beforeDestroy() {
@@ -110,6 +131,10 @@ export default {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.py-10 {
+    padding: 10rem 0;
+}
 
 .code-selection {
     border-radius: .4rem;

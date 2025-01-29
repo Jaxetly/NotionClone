@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="flex justify-center">
+		<div class="flex justify-center my-5">
 			<button @click="$emit('createDocument')" class="button">Создать документ</button>
 		</div>
 		<ul v-if="documents.length !== 0">
@@ -43,13 +43,14 @@ export default {
 			const parser = new DOMParser();
 	        const doc = parser.parseFromString(document.content, 'text/html');
 	        const firstElement = doc.body.firstChild;
-	        if (firstElement && (firstElement.innerHTML || firstElement.textContent)) {
-	            const text = firstElement.innerHTML || firstElement.textContent;
-	            const maxLength = 32;
-	            if (text.length > maxLength) {
-        			return text.substring(0, maxLength) + '...';
-    			}
-    			return text;
+
+	        if (firstElement && firstElement.textContent.trim()) {
+	            const textContent = firstElement.textContent;
+
+	            if (textContent.length > 30) {
+		           return textContent.slice(0, 30) + '...';
+		        }
+		        return textContent;
 	        }
 	        return 'Новый документ';
 		}
