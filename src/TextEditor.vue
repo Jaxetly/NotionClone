@@ -1,13 +1,14 @@
 <template>
     <div @contextmenu.prevent="toggleContextMenu" @click="focus" ref="editor">
-        <editor-content />
-        <ContextButtons 
-            v-if="editor" 
-            :editor="editor" 
-            :editorElement="$refs.editor.__vue__.$el" 
-            ref="contextMenu"
-            class="rounded-lg bg-gray-800 text-white"
-        />
+        <editor-content  />
+        <div v-if="editor != null">
+            <ContextButtons 
+                :editor="editor"
+                :editorElement="$refs.editor.__vue__.$el"
+                ref="contextMenu"
+                class="rounded-lg bg-gray-800 text-white"
+            />
+        </div>
     </div>
 </template>
 
@@ -21,6 +22,8 @@ import Code from '@tiptap/extension-code';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import Underline from '@tiptap/extension-underline';
+import { keymap } from 'prosemirror-keymap';
+import { insertText } from 'prosemirror-commands';
 import ContextButtons from './ContextButtons.vue';
 
 export default {
@@ -31,6 +34,10 @@ export default {
     data() {
         return {
             editor: null,
+            autosaveTimerId: null,
+            debounceTimerId: null,
+            selection: {from:0, to:0},
+            content: '',
             contextMenuCall: 0,
         };
     },
@@ -46,49 +53,88 @@ export default {
                 Link.configure({
                     HTMLAttributes: {
                         class: 'link',
-                    },
+                    }
                 }),
                 Code.configure({
                     HTMLAttributes: {
                         class: 'code-selection text-slate-100 bg-gray-700 font-normal',
-                    },
-                }),
+                    }
+                })
             ],
             editorProps: {
                 attributes: {
                     class: 'h-100 prose-invert prose prose-lg xl:prose-2xl m-5 py-10 focus:outline-none max-w-screen-xl block w-full strong',
                 },
             },
+            content: this.content,
             onUpdate: ({ editor }) => {
-                this.$emit('updateContent', editor.getHTML());
+                this.content = editor.getHTML();
+                this.$emit('updateContent', this.content);
             },
+            onCreate: () => {
+                if (this.initContent) {
+                    this.editor.commands.setContent(this.initContent);
+                }
+            },
+            onSelectionUpdate: ({editor}) => {
+                if (this.debounceTimerId) clearTimeout(this.debounceTimeout);
+
+                if(this.contextMenuCall > 0) {
+                    this.contextMenuCall -= 1;
+                    return;
+                }
+
+                const { from, to } = editor.state.selection;
+
+                this.debounceTimerId = setTimeout(() => {
+                    if (from === to) {
+                        this.disableContextButtons();
+                    } else {
+                        try {
+                            const selectedNodes = [];
+                            editor.state.doc.nodesBetween(from, to, (node) => {
+                                selectedNodes.push(node);
+                            });
+                            for (const node of selectedNodes) {
+                                if (node.type.name === 'image') {
+                                    return;
+                                }
+                            } // проверка что выделенное - не изображение (ломается логика)
+
+                            const coords = editor.view.coordsAtPos(from);
+                            if (coords) {
+                                this.enableContextButtons(coords.top, coords.left);
+                            } else {
+                                console.error('coords is undefined');
+                                this.disableContextButtons();
+                            }
+                        } catch (error) {
+                            console.error('Error handling selection update:', error);
+                            this.disableContextButtons();
+                        }
+                    }
+                }, 50);
+            }
         });
     },
     methods: {
-        // Фокус на редакторе
-        focus() {
+        focus(event) {
             this.editor.chain().focus();
-            if (this.contextMenuCall > 0) {
+            if(this.contextMenuCall > 0) {
                 this.contextMenuCall -= 1;
                 this.disableContextButtons();
             }
         },
-
-        // Переключение контекстного меню
         toggleContextMenu(event) {
             this.contextMenuCall = 2;
             this.enableContextButtons(event.clientY, event.clientX);
         },
-
-        // Отключение контекстного меню
         disableContextButtons() {
             this.$refs.contextMenu.disableContextMenu();
         },
-
-        // Включение контекстного меню
         enableContextButtons(top, left) {
             this.$refs.contextMenu.enableContextMenu(top, left);
-        },
+        }
     },
     beforeDestroy() {
         this.editor.destroy();

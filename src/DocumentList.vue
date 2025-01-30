@@ -1,51 +1,65 @@
 <template>
-    <div>
-        <div class="flex justify-center m-4">
-            <button @click="$emit('createDocument')" class="button-create">Создать документ</button>
-        </div>
-        <ul v-if="documents.length !== 0">
-            <li
-                v-for="(document, index) in documents"
-                :key="index"
-                @click="$emit('switchDocument', index)"
-                :class="['button-document', { 'bg-blue-800': currentDocument === index, 'bg-gray-800': currentDocument !== index }]"
-            >
-                <div v-text="getTitle(document)" class="title"></div>
-                <button @click.stop="$emit('deleteDocument', index)" class="btn btn-transparent">
-                    <i class="bi bi-trash" style="font-size: 18px; color: red;"></i>
-                </button>
-            </li>
-        </ul>
-    </div>
+	<div>
+		<div class="flex justify-center m-4 ">
+			<button @click="$emit('createDocument')" class="button-create">Создать документ</button>
+		</div>
+		<ul v-if="documents.length !== 0">
+			<li 
+				v-for="(documentTitle, index) in titles" 
+				:key="index"  
+				@click="$emit('switchDocument', index)"
+				style="position: relative;"
+				:class="['button-document',
+					{ 'bg-blue-800': currentDocument === index }, {'bg-gray-800': currentDocument !== index}]"
+			>
+			<div v-text="documentTitle" class="title"></div>
+			<button @click.stop="$emit('deleteDocument', index)" class="btn btn-transparent">
+		      	<i class="bi bi-trash" style="font-size: 18px; color: red;"></i>
+		    </button>
+			</li>
+		</ul>
+	</div>
 </template>
 
 <script>
 export default {
-    name: 'DocumentList',
-    props: {
-        documents: {
-            type: Array,
-            required: true,
-        },
-        currentDocument: {
-            type: Number,
-            required: true,
-        },
-    },
-    methods: {
-        // Получение заголовка документа
-        getTitle(document) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(document.content, 'text/html');
-            const firstElement = doc.body.firstChild;
+	name: 'DocumentList',
+	props: {
+		documents: {
+			type: Array,
+			required: true
+		},
+		currentDocument: Number
+	},
+	methods: {
+		getTitle(document) {
+			const title = document.content.match(/<([^>]+)>(.*?)<\/\1>/);
+			//const title = document.content.match(/<([^>]+)>([\s\S]*?)<\/\1>/);
+			const maxLength = 32;
+            if (title && !title[0].includes('></')) {
+    			return title[0];
 
-            if (firstElement && firstElement.textContent.trim()) {
-                return firstElement.textContent;
             }
             return 'Новый документ';
-        },
-    },
-};
+   			
+		},
+		getTitleDOMParser(document) {
+			const parser = new DOMParser();
+	        const doc = parser.parseFromString(document.content, 'text/html');
+	        const firstElement = doc.body.firstChild;
+
+	        if (firstElement && firstElement.textContent.trim()) {
+		        return firstElement.textContent;
+	        }
+	        return 'Новый документ';
+		}
+	},
+	computed: {
+		titles() {
+			return this.documents.map(content => this.getTitleDOMParser(content));
+		}
+	}
+}
 </script>
 
 <style scoped>
