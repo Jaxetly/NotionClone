@@ -5,11 +5,11 @@
             :documents="documents"
             :currentDocument="currentDocument"
             @createDocument="createDocument"
-            @switchDocument="switchDocument" />
+            @switchDocument="switchDocument"
+            @deleteDocument="deleteDocument" />
         <TextEditor 
             id="content" 
             ref="textEditor"
-            :initContent="content"
             @updateContent="updateContent" 
             class="bg-gray-900 flex justify-center" />
     </div>
@@ -28,26 +28,26 @@ export default {
     data() {
         return {
             documents: JSON.parse(localStorage.getItem('documents')) || [{content: '', lastChange: Date.now()}],
-            contentCopy: '',
             content: '',
             currentDocument: 0,
         }
     },
     watch: {
         currentDocument(newIndex) {
-            this.content = "abobaabobaabobaabobaabobaabobaabobaabobaaboba";
-            this.content = this.documents[newIndex].content || '';
-            //this.$refs.textEditor.editor.commands.setContent(this.content);
-            this.contentCopy = this.content;
+            this.setContent(this.documents[newIndex].content || '');
+            localStorage.setItem('latestDocimentIndex', newIndex);
         }
     },
-    created() {
-        this.setCurrentDocumentToLatest();
+    mounted() {
+        this.currentDocument = Number(localStorage.getItem('latestDocimentIndex'));
+        if (this.currentDocument === 0) {
+            this.setContent(this.documents[0].content);
+        }
     },
     methods: {
         updateContent(documentContent) {
-            this.contentCopy = documentContent;
-            this.autoSave(this.contentCopy);
+            this.content = documentContent;
+            this.autoSave(this.content);
         },
         autoSave(documentContent) {
             if (this.autosaveTimerId) {clearTimeout(this.autosaveTimerId);}
@@ -60,6 +60,7 @@ export default {
                 content: documentContent,
                 lastChange: Date.now()
             });
+            localStorage.setItem('documents', JSON.stringify(this.documents));
         },
         setCurrentDocumentToLatest() {
             if (this.documents.length === 0) {return;}
@@ -69,31 +70,59 @@ export default {
 
             for (let index = 1; index < this.documents.length; index++) {
                 const document = this.documents[index];
-
                 if (document.lastChange > latestChange) {
                     latestChange = document.lastChange;
                     latestIndex = index;
                 }
             }
-
+            if (latestIndex === 0) {
+                this.setContent(this.documents[0].content);
+            }
             this.currentDocument = latestIndex;
+        },
+        setContent(newContent) {
+            this.content = newContent;
+            this.saveContent(this.content);
+            this.$refs.textEditor.editor.commands.setContent(newContent); //Костыль для переключения документов. Я хотел использовать реактивность, но никак.
         },
         switchDocument (index)  {
             if (index === this.currentDocument) return;
             if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
 
-            this.saveContent(this.contentCopy);
+            this.saveContent(this.content);
             this.currentDocument = index;
             
         },
         createDocument() {
-            this.documents.push(
+            this.$set(this.documents, this.documents.length, 
                 {
                     content: '',
                     lastChange: Date.now(),
-                }
-            );
+                });
             this.switchDocument(this.documents.length - 1);
+        },
+        deleteDocument(index) {
+            if (this.documents.length > 1) {
+                if (this.currentDocument === 0 && index === 0) {
+                    this.currentDocument = 1;
+                }
+                this.$nextTick(() => {
+                    this.documents.splice(index, 1);
+                    if (this.currentDocument === index) {
+                        if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
+                    }
+                    if (this.currentDocument >= index) {
+                        this.currentDocument = this.currentDocument - 1;
+                    }
+                });
+            } else {
+                this.$set(this.documents, this.currentDocument, {
+                    content: '',
+                    lastChange: Date.now()
+                });
+                if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
+                this.setContent('');
+            }
         }
     }
 };
@@ -113,7 +142,7 @@ export default {
 }
 
 #menu {
-    width: 300px; /* Ширина меню */
+    width: 320px; /* Ширина меню */
     border-right: 3px solid rgb(209 213 219);
     overflow-y: auto; /* Вертикальная прокрутка для меню */
 }

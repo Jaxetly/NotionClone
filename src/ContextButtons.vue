@@ -173,7 +173,7 @@ export default {
 
                 this.contextMenuStyle = {
                     top: topPositionToTop,
-                    left: `${(editorRect.width - contextMenuRect.width) / 2 + 295}px`,
+                    left: `${(editorRect.width - contextMenuRect.width) / 2 + 315}px`, //Вы можете спросить откуда +315, а я отвечу что не знаю.
                 };
             });
         },

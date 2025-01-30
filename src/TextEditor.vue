@@ -15,23 +15,20 @@
 <script>
 import { Editor, EditorContent } from '@tiptap/vue-2';
 import StarterKit from '@tiptap/starter-kit';
-import Color from '@tiptap/extension-color'
-import ListItem from '@tiptap/extension-list-item'
-import TextStyle from '@tiptap/extension-text-style'
-import Code from '@tiptap/extension-code'
-import Link from '@tiptap/extension-link'
-import Underline from '@tiptap/extension-underline'
+import Color from '@tiptap/extension-color';
+import ListItem from '@tiptap/extension-list-item';
+import TextStyle from '@tiptap/extension-text-style';
+import Code from '@tiptap/extension-code';
+import Link from '@tiptap/extension-link';
+import Underline from '@tiptap/extension-underline';
 import { keymap } from 'prosemirror-keymap';
 import { insertText } from 'prosemirror-commands';
-import ContextButtons from './ContextButtons.vue'
+import ContextButtons from './ContextButtons.vue';
 
 export default {
     components: {
         EditorContent,
         ContextButtons,
-    },
-    props: {
-        initContent: String
     },
     data() {
         return {
@@ -39,7 +36,7 @@ export default {
             autosaveTimerId: null,
             debounceTimerId: null,
             content: '',
-            contextMenuCall: false,
+            contextMenuCall: 0,
         };
     },
     mounted() {
@@ -79,47 +76,53 @@ export default {
             onSelectionUpdate: ({editor}) => {
                 if (this.debounceTimerId) clearTimeout(this.debounceTimeout);
 
+                if(this.contextMenuCall > 0) {
+                    this.contextMenuCall -= 1;
+                    return;
+                }
+
                 this.debounceTimerId = setTimeout(() => {
-                    if(this.contextMenuCall) {
-                        this.contextMenuCall = false;
-                        return;
-                    }
 
                     const { from, to } = editor.state.selection;
                     if (from === to) {
-                        this.$refs.contextMenu.disableContextMenu();
+                        this.disableContextButtons();
                     } else {
 
                         try {
                             const coords = editor.view.coordsAtPos(from);
                             if (coords) {
-                                this.$refs.contextMenu.enableContextMenu(coords.top);
+                                this.enableContextButtons(coords.top);
                             } else {
                                 console.error('coords is undefined');
-                                this.$refs.contextMenu.disableContextMenu();
+                                this.disableContextButtons();
                             }
                         } catch (error) {
                             console.error('Error handling selection update:', error);
-                            this.$refs.contextMenu?.disableContextMenu();
+                            this.disableContextButtons();
                         }
                     }
-                }, 110);
+                }, 50);
             }
         });
-    },
-    watch: {
-        initContent(newContent) {
-            this.editor.commands.setContent(newContent);
-        },
     },
     methods: {
         focus(event) {
             this.editor.chain().focus();
+            if(this.contextMenuCall > 0) {
+                this.contextMenuCall -= 1;
+                this.disableContextButtons();
+            }
         },
         toggleContextMenu(event) {
-            this.contextMenuCall = true;
+            this.contextMenuCall = 2;
             this.$refs.contextMenu.enableContextMenu(event.clientY);
         },
+        disableContextButtons() {
+            this.$refs.contextMenu?.disableContextMenu();
+        },
+        enableContextButtons(top) {
+            this.$refs.contextMenu.enableContextMenu(top);
+        }
     },
     beforeDestroy() {
         this.editor.destroy();
