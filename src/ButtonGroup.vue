@@ -6,7 +6,7 @@
             :key="buttonIndex" 
             @click="doAction(button)"
             :disabled="isDisabled(button)" 
-            :class="{ 'bg-blue-500': isActive(button), 'btn bg-gray-700 m-1 p-2 rounded': true }"
+            :class="{ 'bg-blue-500': isActive(button), 'btn bg-gray-700 mr-1 mt-1 rounded': true }"
             :title="button.label"
         >
             <i :class="button.icon"></i>
@@ -27,7 +27,15 @@ export default {
                 toggleHeading: () => this.editor.chain().focus()[button.action]({ level: button.level }).run,
                 setLink: () => {
                     const url = window.prompt('URL');
-                    return this.editor.chain().focus().extendMarkRange('link')[button.action]({ href: url }).run;
+                    if (url) {
+                        return this.editor.chain().focus().extendMarkRange('link')[button.action]({ href: url }).run;
+                    }
+                },
+                addImage: () => {
+                    const url = window.prompt('URL');
+                    if (url) {
+                        return this.editor.chain().focus().setImage({ src: url }).run;
+                    }
                 },
                 default: () => this.editor.chain().focus()[button.action]().run,
             };
@@ -43,7 +51,7 @@ export default {
             if (button.action === 'toggleHeading' && button.level !== undefined) {
                 return !this.editor.can()[button.action]({ level: button.level });
             }
-            if (button.isClear || button.action === 'setLink') {
+            if (button.isClear || ['setLink', 'addImage'].includes(button.action)) {
                 return false;
             }
             return !this.editor.can()[button.action]();

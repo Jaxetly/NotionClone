@@ -143,7 +143,7 @@ export default {
 
 #menu {
     width: 320px; /* Ширина меню */
-    border-right: 3px solid rgb(209 213 219);
+    border-right: 3px solid oklch(0.446 0.03 256.802);
     overflow-y: auto; /* Вертикальная прокрутка для меню */
 }
 #content {

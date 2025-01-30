@@ -20,6 +20,7 @@ import ListItem from '@tiptap/extension-list-item';
 import TextStyle from '@tiptap/extension-text-style';
 import Code from '@tiptap/extension-code';
 import Link from '@tiptap/extension-link';
+import Image from '@tiptap/extension-image';
 import Underline from '@tiptap/extension-underline';
 import { keymap } from 'prosemirror-keymap';
 import { insertText } from 'prosemirror-commands';
@@ -35,6 +36,7 @@ export default {
             editor: null,
             autosaveTimerId: null,
             debounceTimerId: null,
+            selection: {from:0, to:0},
             content: '',
             contextMenuCall: 0,
         };
@@ -46,6 +48,7 @@ export default {
                 StarterKit,
                 Underline,
                 Color,
+                Image,
                 TextStyle.configure({ types: [ListItem.name] }),
                 Link.configure({
                     HTMLAttributes: {
@@ -81,17 +84,26 @@ export default {
                     return;
                 }
 
-                this.debounceTimerId = setTimeout(() => {
+                const { from, to } = editor.state.selection;
 
-                    const { from, to } = editor.state.selection;
+                this.debounceTimerId = setTimeout(() => {
                     if (from === to) {
                         this.disableContextButtons();
                     } else {
-
                         try {
+                            const selectedNodes = [];
+                            editor.state.doc.nodesBetween(from, to, (node) => {
+                                selectedNodes.push(node);
+                            });
+                            for (const node of selectedNodes) {
+                                if (node.type.name === 'image') {
+                                    return;
+                                }
+                            } // проверка что выделенное - не изображение (ломается логика)
+
                             const coords = editor.view.coordsAtPos(from);
                             if (coords) {
-                                this.enableContextButtons(coords.top);
+                                this.enableContextButtons(coords.top, coords.left);
                             } else {
                                 console.error('coords is undefined');
                                 this.disableContextButtons();
@@ -115,13 +127,13 @@ export default {
         },
         toggleContextMenu(event) {
             this.contextMenuCall = 2;
-            this.$refs.contextMenu.enableContextMenu(event.clientY);
+            this.enableContextButtons(event.clientY, event.clientX);
         },
         disableContextButtons() {
-            this.$refs.contextMenu?.disableContextMenu();
+            this.$refs.contextMenu.disableContextMenu();
         },
-        enableContextButtons(top) {
-            this.$refs.contextMenu.enableContextMenu(top);
+        enableContextButtons(top, left) {
+            this.$refs.contextMenu.enableContextMenu(top, left);
         }
     },
     beforeDestroy() {
@@ -134,6 +146,13 @@ export default {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+img {
+    display: block;
+    height: auto;
+    margin: 1.5rem 0;
+    max-width: 100%;
+}
 
 .py-10 {
     padding: 10rem 0;

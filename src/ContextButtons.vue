@@ -9,7 +9,7 @@
         />
         <div class="context-group color-picker">
             <h6 class="context-group-title">Color</h6>
-            <div class="btn bg-gray-700 m-1 p-2 rounded" @click="toggleSelect">
+            <div class="btn bg-gray-700 mr-1 mt-1 rounded" @click="toggleSelect">
                 <i class="bi bi-paint-bucket"></i>
             </div>
             <div ref="colorSelect" v-show="isSelectVisible" class="color-options" :style="selectColorStyle">
@@ -48,7 +48,7 @@ export default {
         return {
             isSelectVisible: false,
             contextMenuVisible: false,
-            contextMenuStyle: {top:'-100px'},
+            contextMenuStyle: {top:'-100px', left:'320px'},
             colors: [
                 { value: '#FF5733', label: 'Red' },
                 { value: '#2ECC71', label: 'Green' },
@@ -61,7 +61,7 @@ export default {
                 { value: '#16A085', label: 'Sea Green' },
                 { value: '#FF6F92', label: 'Pink' },
             ],
-            selectColorStyle: {top: '0px',left: '0px'},
+            selectColorStyle: {top: '0px', left: '0px'},
             buttonGroups: [
                 {
                     title: 'Text Formatting',
@@ -104,10 +104,11 @@ export default {
                         { action: 'toggleBlockquote', label: 'Blockquote', icon: 'bi-chat-left-quote' },
                         { action: 'setHorizontalRule', label: 'Horizontal rule', icon: 'bi bi-dash', isClear: true },
                         { action: 'setHardBreak', label: 'Hard break', icon: 'bi bi-arrow-down', isClear: true },
+                        { action: 'addImage', label: 'Image from URL', icon: 'bi bi-image'},
                     ]
                 },
                 {
-                    title: 'Undo/Redo',
+                    title: 'Un/Re',
                     buttons: [
                         { action: 'undo', label: 'Undo', icon: 'bi bi-arrow-counterclockwise', isUndoRedo: true },
                         { action: 'redo', label: 'Redo', icon: 'bi bi-arrow-clockwise', isUndoRedo: true },
@@ -145,12 +146,12 @@ export default {
         },
         toggleContextMenu(event) {
             if(!this.contextMenuVisible) {
-                this.enableContextMenu(event.clientY);
+                this.enableContextMenu(event.clientY, event.clientX);
             } else {
                 this.disableContextMenu();
             }
         },
-        enableContextMenu(clientY) {
+        enableContextMenu(clientY, clientX) {
             const menuOffset = 50;
             const contextMenuElement = this.$refs.contextMenu;
             this.contextMenuVisible = true;
@@ -167,13 +168,17 @@ export default {
                     ? `${10}px`
                     : `${clientY - contextMenuHeight - menuOffset}px`;
 
-                const topPositionToBottom = isCursorNearBottom 
-                    ? `${clientY - contextMenuHeight - menuOffset}px` 
-                    : `${clientY + menuOffset}px`
+                const menuWidth = contextMenuRect.width;
+                let left = clientX - menuWidth / 2;
+                if (left + menuWidth > window.innerWidth - 10) {
+                    left = window.innerWidth - menuWidth - 10;
+                } else if (left < 320 + 10) {
+                    left = 320 + 10;
+                }
 
                 this.contextMenuStyle = {
                     top: topPositionToTop,
-                    left: `${(editorRect.width - contextMenuRect.width) / 2 + 315}px`, //Вы можете спросить откуда +315, а я отвечу что не знаю.
+                    left: `${left}px`, //`${(editorRect.width - menuWidth) / 2 + 315}px`, //Вы можете спросить откуда +315, а я отвечу что не знаю.
                 };
             });
         },
@@ -194,7 +199,7 @@ export default {
     position: fixed;
     display: inline-flex;
     z-index: 1000;
-    transition: top 0.3s ease;
+    transition: top 0.3s ease, left 0.2s ;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -222,7 +227,7 @@ export default {
 }
 
 .btn {
-    padding: 0.375rem 0.75rem;
+    padding: 0.15rem 0.525rem;
 }
 
 .btn:disabled, .btn.disabled {

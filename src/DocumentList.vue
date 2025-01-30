@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="flex justify-center my-5">
+		<div class="flex justify-center m-4 ">
 			<button @click="$emit('createDocument')" class="button-create">Создать документ</button>
 		</div>
 		<ul v-if="documents.length !== 0">
@@ -12,9 +12,9 @@
 				:class="['button-document',
 					{ 'bg-blue-800': currentDocument === index }, {'bg-gray-800': currentDocument !== index}]"
 			>
-			<div v-html="documentTitle" class="title"></div>
+			<div v-text="documentTitle" class="title"></div>
 			<button @click.stop="$emit('deleteDocument', index)" class="btn btn-transparent">
-		      	<i class="bi bi-trash" style="font-size: 18.7px; color: red;"></i>
+		      	<i class="bi bi-trash" style="font-size: 18px; color: red;"></i>
 		    </button>
 			</li>
 		</ul>
@@ -66,6 +66,7 @@ export default {
 
 .btn-transparent {
 	position: absolute; 
+	padding: 0.3rem 0.675rem;
 	top: -1px; 
 	right: -1px; 
 	background: transparent;
@@ -74,8 +75,8 @@ export default {
 }
 
 .button-create {
-	width: 90%;
-	margin-top: 10px;
+	width: 100%;
+	margin: 5px;
 	padding: 4px;
 	font-weight: 600;
 	font-size: 1.2rem;
@@ -91,7 +92,7 @@ export default {
 .button-document {
 	color: white;
 	cursor: pointer;
-	padding: 0.5rem;
+	padding: 0.4rem;
 	margin: 0.5rem;
 	border: 1px solid rgb(75 85 99);
 	border-radius: 6px;
