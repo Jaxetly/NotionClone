@@ -10,6 +10,7 @@
         <TextEditor
             ref="textEditor"
             @updateContent="updateContent" 
+            :content="contentToSave"
             class="text-editor" />
     </div>
 </template>
@@ -72,7 +73,9 @@ export default {
         },
         setContent(newContent) {
             this.contentToSave = newContent;
-            this.$refs.textEditor.editor.commands.setContent(newContent); //Костыль для переключения документов. Я хотел использовать реактивность, но никак.
+            this.$nextTick(() => {
+                this.$refs.textEditor.resetEditor(); //Костыль для переключения документов. Я хотел использовать реактивность, но никак.
+            });
         },
         switchDocument (index)  {
             if (index !== this.currentDocumentIndex) {

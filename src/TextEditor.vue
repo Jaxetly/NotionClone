@@ -1,6 +1,6 @@
 <template>
     <div @contextmenu.prevent="toggleContextMenu" @click="focus" ref="editor">
-        <editor-content  />
+        <editor-content />
         <ContextButtons 
             v-if="editor"
             :editor="editor"
@@ -26,45 +26,56 @@ export default {
         EditorContent,
         ContextButtons,
     },
+    props: {
+        content: {
+            type: String,
+            default: ''
+        }
+    },
     data() {
         return {
             editor: null,
-            content: '',
             contextMenuCall: 0,
         };
     },
     mounted() {
-        this.editor = new Editor({
-            element: this.$refs.editor,
-            extensions: [
-                StarterKit,
-                Underline,
-                Color,
-                Image,
-                TextStyle.configure({ types: [ListItem.name] }),
-                Link.configure({ HTMLAttributes: { class: 'link' } }),
-                Code.configure({ HTMLAttributes: { class: 'code-selection text-slate-100 bg-gray-700 font-normal' } })
-            ],
-            editorProps: {
-                attributes: {
-                    class: 'h-100 prose-invert prose prose-lg xl:prose-2xl m-5 py-10 focus:outline-none max-w-screen-xl block w-full strong',
-                },
-            },
-            content: this.content,
-            onUpdate: ({ editor }) => {
-                this.content = editor.getHTML();
-                this.$emit('updateContent', this.content);
-            },
-            onSelectionUpdate: ({editor}) => {
-                if(this.contextMenuCall > 0) {
-                    this.contextMenuCall -= 1;
-                    return;
-                }
-                this.handleSelectionUpdate(editor);
-            }
-        });
+        this.setEditor();
     },
     methods: {
+        setEditor() {
+            this.editor = new Editor({
+                element: this.$refs.editor,
+                extensions: [
+                    StarterKit.configure({ code: false }),
+                    Underline,
+                    Color,
+                    Image,
+                    TextStyle.configure({ types: [ListItem.name] }),
+                    Link.configure({ HTMLAttributes: { class: 'link' } }),
+                    Code.configure({ HTMLAttributes: { class: 'code-selection text-slate-100 bg-gray-700 font-normal' } })
+                ],
+                editorProps: {
+                    attributes: {
+                        class: 'h-100 prose-invert prose prose-lg xl:prose-2xl m-5 py-10 focus:outline-none max-w-screen-xl block w-full strong',
+                    },
+                },
+                content: this.content,
+                onUpdate: ({ editor }) => {
+                    this.$emit('updateContent', editor.getHTML());
+                },
+                onSelectionUpdate: ({editor}) => {
+                    if(this.contextMenuCall > 0) {
+                        this.contextMenuCall -= 1;
+                        return;
+                    }
+                    this.handleSelectionUpdate(editor);
+                }
+            });
+        },
+        resetEditor() {
+            this.editor.destroy();
+            this.setEditor();
+        },
         focus(event) {
             this.editor.chain().focus();
             if(this.contextMenuCall > 0) { 
