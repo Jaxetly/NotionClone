@@ -1,5 +1,7 @@
 <template>
-    <div ref="contextMenu" class="context-menu" :style="contextMenuStyle">
+    <div ref="contextMenu"
+        :class="['context-menu', {'max-width-700': doesntFit}]"
+        :style="contextMenuStyle">
         <div ref="colorSelect" v-show="isSelectVisible" class="color-options" :style="selectColorStyle">
             <div 
                 v-for="color in colors" 
@@ -39,7 +41,8 @@ export default {
         return {
             isSelectVisible: false,
             contextMenuVisible: false,
-            contextMenuStyle: {top:'-100px', left:'320px'},
+            doesntFit: false,
+            contextMenuStyle: {top:'-150px', left:'320px'},
             colors: [
                 { value: '#FF5733', label: 'Red' },
                 { value: '#2ECC71', label: 'Green' },
@@ -162,18 +165,28 @@ export default {
         },
         calculateLeftPosition(clientX, contextMenuElement) {
             const menuWidth = contextMenuElement.getBoundingClientRect().width;
+            const leftMenu = document.querySelector('.menu');
+            let tooRigth = false;
+            let tooLeft = false;
+
             let left = clientX - menuWidth / 2;
             if (left + menuWidth > window.innerWidth - 10) {
                 left = window.innerWidth - menuWidth - 10;
-            } else if (left < 320 + 10) {
-                left = 320 + 10;
+                tooRigth = true;
             }
+            if (left < leftMenu.offsetWidth + 10) {
+                left = leftMenu.offsetWidth + 10;
+                tooLeft = true;
+            }
+
+            this.doesntFit = window.innerWidth - 10 - (leftMenu.offsetWidth + 10) < 1000; //Если размер экрана маленький, кнопки становятся в две строчки. Красиво через grid сделать не смог(
+
             return left;
         },
         disableContextMenu() {
             this.contextMenuVisible = false;
             if (this.isSelectVisible) this.isSelectVisible = false;
-            this.contextMenuStyle.top = '-100px';
+            this.contextMenuStyle.top = '-150px';
         },
     }
 };
@@ -189,6 +202,19 @@ export default {
     z-index: 1000;
     transition: top 0.3s ease, left 0.15s;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.max-width-700 {
+    max-width: 700px;
+}
+
+.context-group {
+    border-right: 2px solid #ccc;
+    padding: 10px;
+}
+
+.context-group:last-child {
+    border-right: none;
 }
 
 .color-options {
@@ -234,14 +260,4 @@ export default {
 .btn-context.active {
     background-color: var(--blue-500);
 }
-
-.context-group {
-    border-right: 2px solid #ccc;
-    padding: 10px;
-}
-
-.context-group:last-child {
-    border-right: none;
-}
-
 </style>

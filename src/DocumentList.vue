@@ -92,7 +92,7 @@ export default {
 }
 
 .title {
-	max-width: 245px;
+	max-width: calc(100% - 40px);
   	overflow: hidden;
   	text-overflow: ellipsis;
   	white-space: nowrap;
