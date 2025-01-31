@@ -7,10 +7,10 @@
 			<li 
 				v-for="(document, index) in documents"
 				@click="$emit('switchDocument', index)"
-				:class="['button-document', { 'bg-blue-800': currentDocument === index }, {'bg-gray-800': currentDocument !== index}]"
+				:class="['button-document', { 'active': currentDocument === index }]"
 			>
 			<div class="title">{{ getTitle(document) }}</div>
-			<button @click.stop="$emit('deleteDocument', index)" class="btn btn-transparent">
+			<button v-if="documents.length > 1" @click.stop="$emit('deleteDocument', index)" class="btn btn-transparent">
 		      	<i class="bi bi-trash" style="font-size: 18px; color: red;"></i>
 		    </button>
 			</li>
@@ -48,11 +48,11 @@ export default {
 .btn-transparent {
 	position: absolute; 
 	padding: 0.3rem 0.675rem;
-	top: -1px; 
-	right: -1px; 
+	top: 50%;
+	transform: translate(0, -50%);
+	right: 0px; 
 	background: transparent;
-	border: 1px solid rgb(75 85 99);
-	border-radius: 6px;
+	border-left: 1px solid rgb(75 85 99);
 }
 
 .button-create {
@@ -78,6 +78,11 @@ export default {
 	margin: 0.5rem;
 	border: 1px solid rgb(75 85 99);
 	border-radius: 6px;
+	background: rgb(31 41 55);
+}
+
+.button-document.active {
+	background: rgb(55 65 81);
 }
 
 .title {

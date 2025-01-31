@@ -3,7 +3,7 @@
         <DocumentList 
             id="menu"
             :documents="documents"
-            :currentDocument="currentDocument"
+            :currentDocument="currentDocumentIndex"
             @createDocument="createDocument"
             @switchDocument="switchDocument"
             @deleteDocument="deleteDocument" />
@@ -28,27 +28,34 @@ export default {
     data() {
         return {
             documents: JSON.parse(localStorage.getItem('documents')) || [{content: '', lastChange: Date.now()}],
-            content: '',
             autosaveTimerId: null,
-            currentDocument: 0,
+            contentToSave: '', //К сожалению, как бы я не пытался избавиться от этой "лишней" переменной, сделать этого не удалось, она овтечает за корректное сохранение документов при переключении, если вдруг автосохранение еще не выполнилось.
+            currentDocumentIndex: 0,
+        }
+    },
+    computed: {
+        currentDocument() {
+            return this.documents[this.currentDocumentIndex] || { content: '', lastChange: Date.now() };
+        },
+        currentContent() {
+            return this.currentDocument.content;
         }
     },
     watch: {
-        currentDocument(newIndex) {
+        currentDocumentIndex(newIndex) {
             this.setContent(this.documents[newIndex].content || '');
             localStorage.setItem('latestDocimentIndex', newIndex);
         }
     },
     mounted() {
-        this.currentDocument = Number(localStorage.getItem('latestDocimentIndex'));
-        if (this.currentDocument === 0) {
-            this.setContent(this.documents[0].content);
-        }
+        const savedIndex = Number(localStorage.getItem('latestDocumentIndex')) || 0;
+        this.currentDocumentIndex = Math.min(savedIndex, this.documents.length - 1);
+        this.setContent(this.currentContent);
     },
     methods: {
         updateContent(documentContent) {
-            this.content = documentContent;
-            this.autoSave(this.content);
+            this.contentToSave = documentContent;
+            this.autoSave(documentContent);
         },
         autoSave(documentContent) {
             if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
@@ -57,24 +64,22 @@ export default {
             }, 2000);
         },
         saveContent(documentContent) {
-            this.$set(this.documents, this.currentDocument, {
+            this.$set(this.documents, this.currentDocumentIndex, {
                 content: documentContent,
                 lastChange: Date.now()
             });
             localStorage.setItem('documents', JSON.stringify(this.documents));
         },
         setContent(newContent) {
-            this.content = newContent;
-            this.saveContent(this.content);
-            this.setContent(newContent); //Костыль для переключения документов. Я хотел использовать реактивность, но никак.
+            this.contentToSave = newContent;
+            this.$refs.textEditor.editor.commands.setContent(newContent); //Костыль для переключения документов. Я хотел использовать реактивность, но никак.
         },
         switchDocument (index)  {
-            if (index === this.currentDocument) return;
-            if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
-
-            this.saveContent(this.content);
-            this.currentDocument = index;
-            
+            if (index !== this.currentDocumentIndex) {
+                if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
+                this.saveContent(this.contentToSave);
+                this.currentDocumentIndex = index;
+            }
         },
         createDocument() {
             this.documents.push({ content: '', lastChange: Date.now() });
@@ -82,30 +87,13 @@ export default {
         },
         deleteDocument(index) {
             if (this.documents.length > 1) {
-                if (this.currentDocument === 0 && index === 0) {
-                    this.currentDocument = 1;
+                this.documents.splice(index, 1);
+                if (this.currentDocumentIndex >= index) {
+                    this.currentDocumentIndex = Math.max(0, this.currentDocumentIndex - 1);
                 }
-                this.$nextTick(() => {
-                    this.documents.splice(index, 1);
-                    if (this.currentDocument === index) {
-                        if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
-                    }
-                    if (this.currentDocument >= index) {
-                        this.currentDocument = this.currentDocument - 1;
-                    }
-                });
-            } else {
-                this.$set(this.documents, this.currentDocument, {
-                    content: '',
-                    lastChange: Date.now()
-                });
-                if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
-                this.setContent('');
             }
+            this.setContent(this.currentContent);
         },
-        setContent(newContent) {
-            this.$refs.textEditor.editor.commands.setContent(newContent);
-        }
     }
 };
 </script>

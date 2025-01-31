@@ -136,7 +136,7 @@ export default {
                 const isCursorNearBottom = rectButton.bottom + colorSelectHeight > window.innerHeight;
                 this.selectColorStyle = {
                     top: isCursorNearBottom ? `${rectButton.top - colorSelectHeight - rectMenu.top - 2}px` : `${rectButton.bottom - rectMenu.top + 2}px`,
-                    right: `14px`,
+                    right: `14px`, //Все что бы оно было ровно, подсчитано эксперементальным путем. Нет, rectButton.right не сработает
                 };
             });
         },
@@ -184,7 +184,7 @@ export default {
     position: fixed;
     display: inline-flex;
     z-index: 1000;
-    transition: top 0.3s ease, left 0.2s ;
+    transition: top 0.3s ease, left 0.2s;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
