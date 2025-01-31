@@ -5,7 +5,7 @@
             v-for="(button, buttonIndex) in buttons"
             @click.stop="(event) => doAction(button, event)"
             :disabled="isDisabled(button)" 
-            :class="[{ 'bg-blue-500': isActive(button)}, 'btn bg-gray-700 mr-1 mt-1 rounded']"
+            :class="[{ 'active': isActive(button)}, 'btn btn-context']"
             :title="button.label"
         >
             <i :class="button.icon"></i>

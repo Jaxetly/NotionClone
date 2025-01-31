@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="flex justify-center m-4 ">
+		<div class="button-create__container">
 			<button @click="$emit('createDocument')" class="button-create">Создать документ</button>
 		</div>
 		<ul v-if="documents.length !== 0">
@@ -53,6 +53,12 @@ export default {
 	right: 0px; 
 	background: transparent;
 	border-left: 1px solid rgb(75 85 99);
+}
+
+.button-create__container {
+	margin: 1rem;
+	display: flex;
+	justify-content: center;
 }
 
 .button-create {

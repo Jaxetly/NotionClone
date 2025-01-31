@@ -4,7 +4,7 @@
             <div 
                 v-for="color in colors" 
                 :key="color.value" 
-                class="color-option bg-gray-900" 
+                class="color-option" 
                 :style="{ color: color.value }" 
                 @click="setColor(color.value, color.label)"
             >
@@ -183,8 +183,11 @@ export default {
 .context-menu {
     position: fixed;
     display: inline-flex;
+    color: var(--white);
+    border-radius: 0.5rem;
+    background-color: var(--gray-800);
     z-index: 1000;
-    transition: top 0.3s ease, left 0.2s;
+    transition: top 0.3s ease, left 0.15s;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -210,14 +213,26 @@ export default {
     padding: 2px;
     border-width: 1px;
     border-color: rgb(55 65 81);
+    background-color: var(--gray-900);
 }
 
 .btn {
-    padding: 0.15rem 0.525rem;
+    padding: 0.2rem 0.575rem;
 }
 
 .btn:disabled, .btn.disabled {
     opacity: 0.65;
+}
+
+.btn-context {
+    background-color: var(--gray-700);
+    border-radius: 0.25rem;
+    margin-top: 0.25rem;
+    margin-right: 0.25rem;
+}
+
+.btn-context.active {
+    background-color: var(--blue-500);
 }
 
 .context-group {

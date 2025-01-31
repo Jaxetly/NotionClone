@@ -5,7 +5,6 @@
             v-if="editor"
             :editor="editor"
             ref="contextMenu"
-            class="rounded-lg bg-gray-800 text-white"
         />
     </div>
 </template>
@@ -114,10 +113,6 @@ export default {
 </script>
 
 <style>
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 img {
     display: block;
     height: auto;

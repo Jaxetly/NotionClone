@@ -1,17 +1,16 @@
 <template>
-    <div id="app" class="bg-gray-900 text-white" >
+    <div id="app" class="app-container" >
         <DocumentList 
-            id="menu"
+            class="menu"
             :documents="documents"
             :currentDocument="currentDocumentIndex"
             @createDocument="createDocument"
             @switchDocument="switchDocument"
             @deleteDocument="deleteDocument" />
-        <TextEditor 
-            id="content" 
+        <TextEditor
             ref="textEditor"
             @updateContent="updateContent" 
-            class="bg-gray-900 flex justify-center" />
+            class="text-editor" />
     </div>
 </template>
 
@@ -100,19 +99,55 @@ export default {
 </script>
 
 <style>
-#app {
+:root {
+    /* Основные цвета */
+    --black: #000;
+    --white: #fff;
+
+    /* Оттенки серого */
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+
+    /* Оттенки голубого */
+    --blue-50: #eff6ff;
+    --blue-100: #dbeafe;
+    --blue-200: #bfdbfe;
+    --blue-300: #93c5fd;
+    --blue-400: #60a5fa;
+    --blue-500: #3b82f6;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --blue-800: #1e40af;
+    --blue-900: #1e3a8a;
+}
+
+.app-container {
     display: flex;
     height: 100vh;
     margin: 0;
+    color: var(--white);
 }
 
-#menu {
+.text-editor {
+    display: flex;
+    justify-content: center;
+    background-color: var(--gray-900);
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.menu {
     width: 320px;
     border-right: 3px solid oklch(0.446 0.03 256.802);
     overflow-y: auto;
-}
-#content {
-    flex-grow: 1;
-    overflow-y: auto;
+    background-color: var(--gray-800);
 }
 </style>
