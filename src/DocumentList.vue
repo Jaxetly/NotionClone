@@ -5,14 +5,11 @@
 		</div>
 		<ul v-if="documents.length !== 0">
 			<li 
-				v-for="(documentTitle, index) in titles" 
-				:key="index"  
+				v-for="(document, index) in documents"
 				@click="$emit('switchDocument', index)"
-				style="position: relative;"
-				:class="['button-document',
-					{ 'bg-blue-800': currentDocument === index }, {'bg-gray-800': currentDocument !== index}]"
+				:class="['button-document', { 'bg-blue-800': currentDocument === index }, {'bg-gray-800': currentDocument !== index}]"
 			>
-			<div v-text="documentTitle" class="title"></div>
+			<div class="title">{{ getTitle(document) }}</div>
 			<button @click.stop="$emit('deleteDocument', index)" class="btn btn-transparent">
 		      	<i class="bi bi-trash" style="font-size: 18px; color: red;"></i>
 		    </button>
@@ -33,17 +30,6 @@ export default {
 	},
 	methods: {
 		getTitle(document) {
-			const title = document.content.match(/<([^>]+)>(.*?)<\/\1>/);
-			//const title = document.content.match(/<([^>]+)>([\s\S]*?)<\/\1>/);
-			const maxLength = 32;
-            if (title && !title[0].includes('></')) {
-    			return title[0];
-
-            }
-            return 'Новый документ';
-   			
-		},
-		getTitleDOMParser(document) {
 			const parser = new DOMParser();
 	        const doc = parser.parseFromString(document.content, 'text/html');
 	        const firstElement = doc.body.firstChild;
@@ -52,11 +38,6 @@ export default {
 		        return firstElement.textContent;
 	        }
 	        return 'Новый документ';
-		}
-	},
-	computed: {
-		titles() {
-			return this.documents.map(content => this.getTitleDOMParser(content));
 		}
 	}
 }
@@ -90,6 +71,7 @@ export default {
 }
 
 .button-document {
+	position: relative;
 	color: white;
 	cursor: pointer;
 	padding: 0.4rem;

@@ -1,29 +1,24 @@
 <template>
     <div ref="contextMenu" class="context-menu" :style="contextMenuStyle">
+        <div ref="colorSelect" v-show="isSelectVisible" class="color-options" :style="selectColorStyle">
+            <div 
+                v-for="color in colors" 
+                :key="color.value" 
+                class="color-option bg-gray-900" 
+                :style="{ color: color.value }" 
+                @click="setColor(color.value, color.label)"
+            >
+                {{ color.label }}
+            </div>
+        </div>
         <ButtonGroup 
             v-for="(group, groupIndex) in buttonGroups" 
             :key="groupIndex" 
             :title="group.title" 
             :buttons="group.buttons" 
             :editor="editor"
+            @toggleSelect="toggleColorSelect"
         />
-        <div class="context-group color-picker">
-            <h6 class="context-group-title">Color</h6>
-            <div class="btn bg-gray-700 mr-1 mt-1 rounded" @click="toggleSelect">
-                <i class="bi bi-paint-bucket"></i>
-            </div>
-            <div ref="colorSelect" v-show="isSelectVisible" class="color-options" :style="selectColorStyle">
-                <div 
-                    v-for="color in colors" 
-                    :key="color.value" 
-                    class="color-option bg-gray-900" 
-                    :style="{ color: color.value }" 
-                    @click="setColor(color.value, color.label)"
-                >
-                    {{ color.label }}
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -38,11 +33,7 @@ export default {
         editor: {
             type: Object,
             required: true
-        },
-        editorElement: {
-            type: HTMLDivElement,
-            required: true
-        },
+        }
     },
     data() {
         return {
@@ -114,6 +105,12 @@ export default {
                         { action: 'redo', label: 'Redo', icon: 'bi bi-arrow-clockwise', isUndoRedo: true },
                     ]
                 },
+                {
+                    title: 'Color',
+                    buttons: [
+                        { action: 'toggleSelect', label: 'Color the text', icon: 'bi bi-paint-bucket'},
+                    ]
+                }
             ]
         }
     },
@@ -124,71 +121,59 @@ export default {
             this.editor.chain().focus().setColor(color).run();
             this.isSelectVisible = false;
         },
-        toggleSelect(event) {
+        toggleColorSelect(event) {
             this.isSelectVisible = !this.isSelectVisible;
-            const colorSelect = this.$refs.colorSelect;
-                        
-            if(colorSelect && this.isSelectVisible) {
-                this.$nextTick(() => {
-                    const button = event.currentTarget;
-                    const contextMenu = button.parentNode.parentNode;
-                    const rectButton = button.getBoundingClientRect();
-                    const rectMenu = contextMenu.getBoundingClientRect();
-                    const colorSelectHeight = colorSelect.offsetHeight;
-
-                    const isCursorNearBottom = rectButton.bottom + colorSelectHeight > window.innerHeight;
-                    this.selectColorStyle = {
-                        top: isCursorNearBottom ? `${rectButton.top - colorSelectHeight - rectMenu.top - 2}px` : `${rectButton.bottom - rectMenu.top + 2}px`,
-                        right: `14px`,
-                    };
-                });
-            }
+            if (this.isSelectVisible) this.enableColorSelect(event)
         },
-        toggleContextMenu(event) {
-            if(!this.contextMenuVisible) {
-                this.enableContextMenu(event.clientY, event.clientX);
-            } else {
-                this.disableContextMenu();
-            }
+        enableColorSelect(event) {
+            this.$nextTick(() => {
+                const button = event.currentTarget;
+                const contextMenu = button.parentNode.parentNode;
+                const rectButton = button.getBoundingClientRect();
+                const rectMenu = contextMenu.getBoundingClientRect();
+                const colorSelectHeight = this.$refs.colorSelect.offsetHeight;
+
+                const isCursorNearBottom = rectButton.bottom + colorSelectHeight > window.innerHeight;
+                this.selectColorStyle = {
+                    top: isCursorNearBottom ? `${rectButton.top - colorSelectHeight - rectMenu.top - 2}px` : `${rectButton.bottom - rectMenu.top + 2}px`,
+                    right: `14px`,
+                };
+            });
         },
         enableContextMenu(clientY, clientX) {
             const menuOffset = 50;
             const contextMenuElement = this.$refs.contextMenu;
             this.contextMenuVisible = true;
 
+            if (this.isSelectVisible) this.isSelectVisible = false;
+
             this.$nextTick(() => {
                 const contextMenuHeight = contextMenuElement.offsetHeight;
-                const isCursorNearBottom = clientY + contextMenuHeight + menuOffset > window.innerHeight;
                 const isCursorNearTop = clientY - contextMenuHeight - menuOffset < 0;
 
-                const contextMenuRect = contextMenuElement.getBoundingClientRect();
-                const editorRect = this.editorElement.getBoundingClientRect();
-
-                const topPositionToTop = isCursorNearTop
-                    ? `${10}px`
-                    : `${clientY - contextMenuHeight - menuOffset}px`;
-
-                const menuWidth = contextMenuRect.width;
-                let left = clientX - menuWidth / 2;
-                if (left + menuWidth > window.innerWidth - 10) {
-                    left = window.innerWidth - menuWidth - 10;
-                } else if (left < 320 + 10) {
-                    left = 320 + 10;
-                }
+                const topPosition = isCursorNearTop ? 10 : (clientY - contextMenuHeight - menuOffset);
+                const leftPosition = this.calculateLeftPosition(clientX, contextMenuElement);
 
                 this.contextMenuStyle = {
-                    top: topPositionToTop,
-                    left: `${left}px`, //`${(editorRect.width - menuWidth) / 2 + 315}px`, //Вы можете спросить откуда +315, а я отвечу что не знаю.
+                    top: `${topPosition}px`,
+                    left: `${leftPosition}px`,
                 };
             });
         },
+        calculateLeftPosition(clientX, contextMenuElement) {
+            const menuWidth = contextMenuElement.getBoundingClientRect().width;
+            let left = clientX - menuWidth / 2;
+            if (left + menuWidth > window.innerWidth - 10) {
+                left = window.innerWidth - menuWidth - 10;
+            } else if (left < 320 + 10) {
+                left = 320 + 10;
+            }
+            return left;
+        },
         disableContextMenu() {
             this.contextMenuVisible = false;
-            if (this.isSelectVisible) this.toggleSelect();
-            this.contextMenuStyle = {
-                top: '-100px',
-                left: this.contextMenuStyle.left,
-            };
+            if (this.isSelectVisible) this.isSelectVisible = false;
+            this.contextMenuStyle.top = '-100px';
         },
     }
 };
@@ -205,6 +190,7 @@ export default {
 
 .color-options {
     position: absolute;
+    z-index: 1;
     width: 100px;
 }
 

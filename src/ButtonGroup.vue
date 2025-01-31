@@ -2,9 +2,8 @@
     <div class="context-group">
         <h6 class="context-group-title">{{ title }}</h6>
         <button 
-            v-for="(button, buttonIndex) in buttons" 
-            :key="buttonIndex" 
-            @click="doAction(button)"
+            v-for="(button, buttonIndex) in buttons"
+            @click.stop="(event) => doAction(button, event)"
             :disabled="isDisabled(button)" 
             :class="{ 'bg-blue-500': isActive(button), 'btn bg-gray-700 mr-1 mt-1 rounded': true }"
             :title="button.label"
@@ -22,41 +21,36 @@ export default {
         editor: Object
     },
     methods: {
-        getAction(button) {
+        doAction(button, event) {
+            const { action, level } = button;
             const actions = {
-                toggleHeading: () => this.editor.chain().focus()[button.action]({ level: button.level }).run,
-                setLink: () => {
-                    const url = window.prompt('URL');
-                    if (url) {
-                        return this.editor.chain().focus().extendMarkRange('link')[button.action]({ href: url }).run;
-                    }
-                },
-                addImage: () => {
-                    const url = window.prompt('URL');
-                    if (url) {
-                        return this.editor.chain().focus().setImage({ src: url }).run;
-                    }
-                },
-                default: () => this.editor.chain().focus()[button.action]().run,
+                toggleHeading: () => this.editor.chain().focus()[action]({ level }).run(),
+                setLink: () => this.promptUrl(url => this.editor.chain().focus().extendMarkRange('link')[action]({ href: url }).run()),
+                addImage: () => this.promptUrl(url => this.editor.chain().focus().setImage({ src: url }).run()),
+                toggleSelect: () => this.$emit('toggleSelect', event),
+                default: () => this.editor.chain().focus()[action]().run(),
             };
-            return (actions[button.action] || actions.default)();
+            (actions[action] || actions.default)();
         },
-        doAction(button) {
-            this.getAction(button)();
+        promptUrl(callback) {
+            const url = window.prompt('URL');
+            if (url) callback(url);
         },
         isDisabled(button) {
-            if (button.isUndoRedo) {
+            const { action, level, isUndoRedo, isClear } = button;
+            if (isUndoRedo) {
                 return !this.editor.can()[button.action]();
             }
-            if (button.action === 'toggleHeading' && button.level !== undefined) {
+            if (action === 'toggleHeading' && level) {
                 return !this.editor.can()[button.action]({ level: button.level });
             }
-            if (button.isClear || ['setLink', 'addImage'].includes(button.action)) {
+            if (isClear || ['setLink', 'addImage', 'toggleSelect'].includes(action)) {
                 return false;
             }
             return !this.editor.can()[button.action]();
         },
         isActive(button) {
+            const { action, level } = button;
             const activeChecks = {
                 toggleBold: () => this.editor.isActive('bold'),
                 toggleItalic: () => this.editor.isActive('italic'),
@@ -64,10 +58,10 @@ export default {
                 toggleUnderline: () => this.editor.isActive('underline'),
                 toggleCode: () => this.editor.isActive('code'),
                 setLink: () => this.editor.isActive('link'),
-                toggleHeading: () => this.editor.isActive('heading', { level: button.level }),
-                default: () => this.editor.isActive(button.action),
+                toggleHeading: () => this.editor.isActive('heading', { level }),
+                default: () => this.editor.isActive(action),
             };
-            return (activeChecks[button.action] || activeChecks.default)();
+            return (activeChecks[action] || activeChecks.default)();
         },
     }
 };

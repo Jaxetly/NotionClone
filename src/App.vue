@@ -29,6 +29,7 @@ export default {
         return {
             documents: JSON.parse(localStorage.getItem('documents')) || [{content: '', lastChange: Date.now()}],
             content: '',
+            autosaveTimerId: null,
             currentDocument: 0,
         }
     },
@@ -50,10 +51,10 @@ export default {
             this.autoSave(this.content);
         },
         autoSave(documentContent) {
-            if (this.autosaveTimerId) {clearTimeout(this.autosaveTimerId);}
+            if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
             this.autosaveTimerId = setTimeout(() => {
                 this.saveContent(documentContent);
-            }, 3000);
+            }, 2000);
         },
         saveContent(documentContent) {
             this.$set(this.documents, this.currentDocument, {
@@ -62,28 +63,10 @@ export default {
             });
             localStorage.setItem('documents', JSON.stringify(this.documents));
         },
-        setCurrentDocumentToLatest() {
-            if (this.documents.length === 0) {return;}
-
-            let latestIndex = 0;
-            let latestChange = this.documents[0].lastChange;
-
-            for (let index = 1; index < this.documents.length; index++) {
-                const document = this.documents[index];
-                if (document.lastChange > latestChange) {
-                    latestChange = document.lastChange;
-                    latestIndex = index;
-                }
-            }
-            if (latestIndex === 0) {
-                this.setContent(this.documents[0].content);
-            }
-            this.currentDocument = latestIndex;
-        },
         setContent(newContent) {
             this.content = newContent;
             this.saveContent(this.content);
-            this.$refs.textEditor.editor.commands.setContent(newContent); //Костыль для переключения документов. Я хотел использовать реактивность, но никак.
+            this.setContent(newContent); //Костыль для переключения документов. Я хотел использовать реактивность, но никак.
         },
         switchDocument (index)  {
             if (index === this.currentDocument) return;
@@ -94,11 +77,7 @@ export default {
             
         },
         createDocument() {
-            this.$set(this.documents, this.documents.length, 
-                {
-                    content: '',
-                    lastChange: Date.now(),
-                });
+            this.documents.push({ content: '', lastChange: Date.now() });
             this.switchDocument(this.documents.length - 1);
         },
         deleteDocument(index) {
@@ -123,18 +102,15 @@ export default {
                 if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
                 this.setContent('');
             }
+        },
+        setContent(newContent) {
+            this.$refs.textEditor.editor.commands.setContent(newContent);
         }
     }
 };
 </script>
 
 <style>
-.parent {
-    display: flex;
-    flex-direction: column;
-    height: 100%; /* или любая другая высота */
-}
-
 #app {
     display: flex;
     height: 100vh;
@@ -142,12 +118,12 @@ export default {
 }
 
 #menu {
-    width: 320px; /* Ширина меню */
+    width: 320px;
     border-right: 3px solid oklch(0.446 0.03 256.802);
-    overflow-y: auto; /* Вертикальная прокрутка для меню */
+    overflow-y: auto;
 }
 #content {
-    flex-grow: 1; /* Занимает оставшееся пространство */
-    overflow-y: auto; /* Вертикальная прокрутка для контента */
+    flex-grow: 1;
+    overflow-y: auto;
 }
 </style>
