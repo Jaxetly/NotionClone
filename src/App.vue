@@ -44,7 +44,7 @@ export default {
     watch: {
         currentDocumentIndex(newIndex) {
             this.setContent(this.documents[newIndex].content || '');
-            localStorage.setItem('latestDocimentIndex', newIndex);
+            localStorage.setItem('latestDocumentIndex', newIndex);
         }
     },
     mounted() {
@@ -64,6 +64,7 @@ export default {
             }, 2000);
         },
         saveContent(documentContent) {
+            if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
             this.$set(this.documents, this.currentDocumentIndex, {
                 content: documentContent,
                 lastChange: Date.now()
@@ -76,7 +77,6 @@ export default {
         },
         switchDocument (index)  {
             if (index !== this.currentDocumentIndex) {
-                if (this.autosaveTimerId) clearTimeout(this.autosaveTimerId);
                 this.saveContent(this.contentToSave);
                 this.currentDocumentIndex = index;
             }
@@ -90,9 +90,10 @@ export default {
                 this.documents.splice(index, 1);
                 if (this.currentDocumentIndex >= index) {
                     this.currentDocumentIndex = Math.max(0, this.currentDocumentIndex - 1);
+                    this.setContent(this.currentContent);
                 }
             }
-            this.setContent(this.currentContent);
+            this.saveContent(this.currentContent);
         },
     }
 };
