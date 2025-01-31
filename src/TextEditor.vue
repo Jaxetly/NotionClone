@@ -1,6 +1,6 @@
 <template>
     <div @contextmenu.prevent="toggleContextMenu" @click="focus" ref="editor">
-        <editor-content />
+        <EditorContent />
         <ContextButtons 
             v-if="editor"
             :editor="editor"

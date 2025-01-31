@@ -6,6 +6,7 @@
 		<ul v-if="documents.length !== 0">
 			<li 
 				v-for="(document, index) in documents"
+				:key="index"
 				@click="$emit('switchDocument', index)"
 				:class="['button-document', { 'active': currentDocument === index }]"
 			>
