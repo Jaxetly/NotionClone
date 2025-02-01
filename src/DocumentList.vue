@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<div class="button-create__container">
-			<button @click="$emit('createDocument')" class="button-create">Создать документ</button>
+			<button @click="$emit('createDocument')" class="button-create">Create document</button>
 		</div>
 		<ul v-if="documents.length !== 0">
 			<li 
@@ -38,7 +38,7 @@ export default {
 	        if (firstElement && firstElement.textContent.trim()) {
 		        return firstElement.textContent;
 	        }
-	        return 'Новый документ';
+	        return 'New document';
 		}
 	}
 }
